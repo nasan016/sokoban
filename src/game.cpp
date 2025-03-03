@@ -2,48 +2,80 @@
 #include <iostream>
 #include "raylib.h"
 
-enum class State {
+enum class STATE {
   MENU,
   LEVEL_SELECT,
   PLAY,
 };
 
+STATE CURRENT_STATE { STATE::MENU };
+
+const int WIDTH = 500;
+const int HEIGHT = 500;
+
 Game::Game(std::string_view inFile) :
   level(inFile) {
-    InitWindow(500, 500, "Sokoban");
+    InitWindow(WIDTH, HEIGHT, "Sokoban");
     spriteSheet = LoadTexture("game_sprites.png");
   }
 
 void Game::run() {
-
   while (!WindowShouldClose()) {
     level.movePlayer();  
 
     BeginDrawing();
+
       ClearBackground(BLACK);
-      renderLevel();
+      
+      switch (CURRENT_STATE) {
+        case STATE::MENU:
+          renderMenu();
+          break;
+
+        case STATE::LEVEL_SELECT:
+          break;
+
+        case STATE::PLAY:
+          renderLevel();
+          break;
+      }
+
     EndDrawing();
   }
-  //UnloadTexture(spriteSheet);
   CloseWindow();
 }
 
-Game::~Game() {
-  UnloadTexture(spriteSheet);
-  CloseWindow();
+void Game::renderMenu() {
+  const char* title { "Sokoban!" };
+  const char* subString { "Press Enter" };
+
+  const int titleSize { 40 };
+  const int subStringSize { 25 };
+
+  int titleWidth = MeasureText(title, titleSize);
+  int subStringWidth = MeasureText(subString, subStringSize);
+
+  int xTitle = (WIDTH - titleWidth) / 2;
+  int yTitle = (HEIGHT - titleSize) / 2;
+  int xSub = (WIDTH - subStringWidth) / 2;
+  int ySub = (HEIGHT - subStringSize + 60) / 2;
+
+  DrawText(title, xTitle, yTitle, titleSize, RAYWHITE);
+  DrawText(subString, xSub, ySub, subStringSize, RAYWHITE);
+
+  if (IsKeyPressed(KEY_ENTER)) CURRENT_STATE = STATE::PLAY; 
 }
 
 void Game::renderLevel() {
-  const int spriteWidth { 8 };
-  const int spriteHeight { 8 };
+  const int spriteDimensions{ 8 };
   int selectSprite { -1 };
 
-  const int scale = 30;
+  const int scale = 35;
   const int gridWidth = level.longestRow * scale;
   const int gridHeight = level.grid.size() * scale;
 
-  const int offsetX = (500 - gridWidth) / 2;
-  const int offsetY = (500 - gridHeight) / 2;
+  const int offsetX = (WIDTH - gridWidth) / 2;
+  const int offsetY = (HEIGHT - gridHeight) / 2;
 
   for (size_t i = 0; i < level.grid.size(); ++i) {
     for (size_t j = 0; j < level.grid[i].size(); ++j) {
@@ -55,10 +87,10 @@ void Game::renderLevel() {
       if (level.grid[i][j] == 'P') selectSprite = 0;
 
       Rectangle sourceRect = { 
-        static_cast<float>(selectSprite * spriteWidth), 
+        static_cast<float>(selectSprite * spriteDimensions), 
         0, 
-        spriteWidth, 
-        spriteHeight 
+        spriteDimensions, 
+        spriteDimensions 
       };
 
       Rectangle destRect = {
@@ -68,7 +100,7 @@ void Game::renderLevel() {
         scale
       };
 
-      DrawTexturePro(spriteSheet, sourceRect, destRect, {0, 0}, 0.0f, WHITE);
+      DrawTexturePro(spriteSheet, sourceRect, destRect, { 0, 0 }, 0, WHITE);
     }
   }
 }

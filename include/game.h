@@ -6,11 +6,11 @@
 class Game {
   public:
     Game(std::string_view inFile);
-    ~Game();
     void run();
 
   private:
     Level level;
     Texture2D spriteSheet;
+    void renderMenu();
     void renderLevel();
 };
